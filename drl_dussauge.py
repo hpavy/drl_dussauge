@@ -58,8 +58,8 @@ class drl_dussauge():
 
         control_points = self.reconstruct_control_points(control_parameters)
         curve = self.airfoil(control_points,16)
+        self.area = self.polygon_area(curve)
         curve = self.rotate(curve)
-        self.area = Polygon(curve).area
         mesh_size = 0.005 # Mesh size
         try:
             # Init GMSH
@@ -328,4 +328,12 @@ class drl_dussauge():
         curve = np.array(curve)
         rotate_matrix = np.array([[np.cos(self.angle), np.sin(self.angle)], [-np.sin(self.angle), np.cos(self.angle)]])
         return curve @ rotate_matrix
+
+    def polygon_area(self,curve):
+        curve = np.array(curve)
+        x = curve [:,0]
+        y = curve[:,1]
+        correction = x[-1] * y[0] - y[-1]* x[0]
+        main_area = np.dot(x[:-1], y[1:]) - np.dot(y[:-1], x[1:])
+        return 0.5*np.abs(main_area + correction)
 

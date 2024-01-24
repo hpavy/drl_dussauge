@@ -6,6 +6,7 @@ import time
 import numpy as np
 import gmsh
 import matplotlib as plt
+from shapely.geometry import Polygon
 
 ################################
 ### Environment for Wind Turbine 
@@ -27,7 +28,7 @@ class drl_dussauge():
         self.path     = path
         self.finesse_moy= 0
         self.finesse_max= 0
-
+        self.area_min = 0.1                                      ########### Ici on met la surface minimale autorisée
         self.angle = -np.pi/4  #inclinaison en radian            ########### Super important, regarder comment le prendre en compte
 
         # Set episode number
@@ -132,14 +133,14 @@ class drl_dussauge():
 
 
         # Compute new reward
-        if finesse is not None :
+        if finesse is not None and Polygon(curve).area >= self.area_min:   # Si on est supérieur à l'air minimale 
             self.reward = finesse[begin_take_reward:].mean()
             self.finesse_moy = finesse[begin_take_reward:].mean()
             self.finesse_max = finesse[begin_take_reward:].max()
-        else: # Si ça n'a pas tourné 
-            self.reward = -100
-            self.finesse_moy = -100
-            self.finesse_max = -100
+        else: # Si ça n'a pas tourné ou que l'air est trop petite 
+            self.reward = -1000
+            self.finesse_moy = -1000
+            self.finesse_max = -1000
 
         
         # On écrit dans le gros fichier
@@ -148,7 +149,7 @@ class drl_dussauge():
             f = open('Values.txt','w')
             f.write(
                 'Index'+'\t'+'edge'+'\t'+'1'+'\t'+'2'+'\t'+'3'+'\t'+'4'+'\t'+'5'+'\t'+'6'+
-                '\t'+'7'+'\t'+'finesse_moy'+'\t'+'finesse_max'+'\t'+'Reward'+'\n'
+                '\t'+'7'+'\t'+'finesse_moy'+'\t'+'finesse_max'+'\t'+'Area'+'\t'+'Reward'+'\n'
                 )
         else:
             f = open('Values.txt','a')
@@ -156,7 +157,7 @@ class drl_dussauge():
         str(self.episode)+'\t'+"{:.3e}".format(control_parameters[0])+'\t'+"{:.3e}".format(control_parameters[1])+'\t'
         +"{:.3e}".format(control_parameters[2])+'\t'+"{:.3e}".format(control_parameters[3])+'\t'+"{:.3e}".format(control_parameters[4])+'\t'
         +"{:.3e}".format(control_parameters[5])+'\t'+"{:.3e}".format(control_parameters[6])+'\t'+"{:.3e}".format(control_parameters[7])+'\t'
-        +"{:.3e}".format(self.finesse_moy)+'\t'+"{:.3e}".format(self.finesse_max)+'\t'+"{:.3e}".format(self.reward)+'\n'
+        +"{:.3e}".format(self.finesse_moy)+'\t'+"{:.3e}".format(self.finesse_max)+'\t'+"{:.3e}".format(Polygon(curve).area)+'\t'+"{:.3e}".format(self.reward)+'\n'
         )
         f.close()
 		

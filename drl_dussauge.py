@@ -6,6 +6,7 @@ import time
 import numpy as np
 import gmsh
 import matplotlib as plt
+import datetime as dt
 
 ################################
 ### Environment for Wind Turbine 
@@ -33,6 +34,9 @@ class drl_dussauge():
 
         # Set episode number
         self.episode  = 0
+        # Pour savoir la durée d'un épisode
+        self.time_init = 0.
+        self.time_end = 0.
 
 
     def solve_problem_cimlib(self):
@@ -169,6 +173,16 @@ class drl_dussauge():
 
     ### CFD resolution
     def cfd_solve(self, x, ep):
+        # on écrit où nous en sommes 
+        self.time_init=dt.datetime.now()
+        if not os.path.isfile('temps.txt'):
+            f = open('temps.txt','w')
+            f.write('Index'+'\t'+'Heure start'+'\t'+'Heure end'+'\t'+'Durée'+'\n')
+            f.close()
+
+        f = open('temps.txt','a')
+        f.write(str(ep)+'\t'+ dt.datetime.now().strftime("%H:%M:%S")+'\t')
+        f.close()
 
         # Create folders and copy cfd (please kill me)
         # On met les résultats là dedans 
@@ -204,6 +218,13 @@ class drl_dussauge():
         # Compute the reward 
         self.compute_reward(control_parameters)
 
+        self.time_end = dt.datetime.now()
+        difference = self.time_end - self.time_init
+        heures, reste = divmod(difference.seconds, 3600)
+        minutes, secondes = divmod(reste, 60)
+        fi = open('temps.txt','a')
+        fi.write(dt.datetime.now().strftime("%H:%M:%S")+'\t'+f"{str(heures)}:{str(minutes)}:{str(secondes)}" + '\n')
+        fi.close()
         return self.reward
 
     ### Take one step

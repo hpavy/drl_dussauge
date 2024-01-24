@@ -175,13 +175,13 @@ class drl_dussauge():
     def cfd_solve(self, x, ep):
         # on écrit où nous en sommes 
         self.time_init=dt.datetime.now()
-        if not os.path.isfile('temps.txt'):
-            f = open('temps.txt','w')
-            f.write('Index'+'\t'+'Heure start'+'\t'+'Heure end'+'\t'+'Durée'+'\n')
+        if not os.path.isfile('temps_start.txt'):
+            f = open('temps_start.txt','w')
+            f.write('Index'+'\t'+'Heure start'+'\n')
             f.close()
 
-        f = open('temps.txt','a')
-        f.write(str(ep)+'\t'+ dt.datetime.now().strftime("%H:%M:%S")+'\t')
+        f = open('temps_start.txt','a')
+        f.write(str(ep)+'\t'+ dt.datetime.now().strftime("%H:%M:%S")+'\n')
         f.close()
 
         # Create folders and copy cfd (please kill me)
@@ -218,14 +218,28 @@ class drl_dussauge():
         # Compute the reward 
         self.compute_reward(control_parameters)
 
+        # On écrit la durée
+
         self.time_end = dt.datetime.now()
         difference = self.time_end - self.time_init
         heures, reste = divmod(difference.seconds, 3600)
         minutes, secondes = divmod(reste, 60)
-        fi = open('temps.txt','a')
-        fi.write(dt.datetime.now().strftime("%H:%M:%S")+'\t'+f"{str(heures)}:{str(minutes)}:{str(secondes)}" + '\n')
+        
+        if not os.path.isfile('duree.txt'):
+            f = open('duree.txt','w')
+            f.write('Index'+'\t'+'Heure start'+'\t'+'Heure end'+'\t'+'Durée'+'\n')
+            f.close()
+
+        fi = open('duree.txt','a')
+        fi.write(
+            str(ep)+'\t'+ self.time_init.strftime("%H:%M:%S")+'\t'
+            +self.time_end.strftime("%H:%M:%S")+'\t'
+            +f"{str(heures)}:{str(minutes)}:{str(secondes)}"+'\n'
+            )
         fi.close()
         return self.reward
+
+                
 
     ### Take one step
     def step(self, actions, ep):

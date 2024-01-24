@@ -6,7 +6,6 @@ import time
 import numpy as np
 import gmsh
 import matplotlib as plt
-from shapely.geometry import Polygon
 
 ################################
 ### Environment for Wind Turbine 

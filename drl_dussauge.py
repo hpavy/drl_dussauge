@@ -25,6 +25,7 @@ class drl_dussauge():
         self.x_min    =  np.array([0.01, 0.05, 0.1, 0.1, 0.07, -1, -1, -1]) 
         self.x_max    =  np.array([0.1, 0.4, 0.5, 0.5, 0.3, 0.1, 0.05, 0.05]) 
         self.x_0 = np.array( [0.03, 0.08, 0.125, 0.12, 0.08, -0.08, -0.1,-0.08]) # l'aile symétrique
+        self.area = 0  # on va écrire les aires ici
         self.path     = path
         self.finesse_moy= 0
         self.finesse_max= 0
@@ -58,6 +59,7 @@ class drl_dussauge():
         control_points = self.reconstruct_control_points(control_parameters)
         curve = self.airfoil(control_points,16)
         curve = self.rotate(curve)
+        self.area = Polygon(curve).area
         mesh_size = 0.005 # Mesh size
         try:
             # Init GMSH
@@ -133,7 +135,7 @@ class drl_dussauge():
 
 
         # Compute new reward
-        if finesse is not None and Polygon(curve).area >= self.area_min:   # Si on est supérieur à l'air minimale 
+        if finesse is not None and self.area >= self.area_min:   # Si on est supérieur à l'air minimale 
             self.reward = finesse[begin_take_reward:].mean()
             self.finesse_moy = finesse[begin_take_reward:].mean()
             self.finesse_max = finesse[begin_take_reward:].max()
@@ -157,7 +159,7 @@ class drl_dussauge():
         str(self.episode)+'\t'+"{:.3e}".format(control_parameters[0])+'\t'+"{:.3e}".format(control_parameters[1])+'\t'
         +"{:.3e}".format(control_parameters[2])+'\t'+"{:.3e}".format(control_parameters[3])+'\t'+"{:.3e}".format(control_parameters[4])+'\t'
         +"{:.3e}".format(control_parameters[5])+'\t'+"{:.3e}".format(control_parameters[6])+'\t'+"{:.3e}".format(control_parameters[7])+'\t'
-        +"{:.3e}".format(self.finesse_moy)+'\t'+"{:.3e}".format(self.finesse_max)+'\t'+"{:.3e}".format(Polygon(curve).area)+'\t'+"{:.3e}".format(self.reward)+'\n'
+        +"{:.3e}".format(self.finesse_moy)+'\t'+"{:.3e}".format(self.finesse_max)+'\t'+"{:.3e}".format(self.area)+'\t'+"{:.3e}".format(self.reward)+'\n'
         )
         f.close()
 		

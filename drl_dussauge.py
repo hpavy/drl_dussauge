@@ -21,8 +21,8 @@ class drl_dussauge():
         self.obs_size = self.act_size
         self.obs      = np.zeros(self.obs_size)
         # Variable : une pour l'eading edge et les autres pour les points de contrôle
-        self.x_min    =  np.array([0.005, 0.05, 0.05, 0.05, 0.05, -0.15, -0.15, -0.15]) 
-        self.x_max    =  np.array([0.13, 0.2, 0.2, 0.2, 0.2, 0.2, 0.2, 0.2]) 
+        self.x_min    =  np.array([0.01, 0.05, 0.1, 0.1, 0.07, -1, -1, -1]) 
+        self.x_max    =  np.array([0.1, 0.4, 0.5, 0.5, 0.3, 0.1, 0.05, 0.05]) 
         self.x_0 = np.array( [0.03, 0.08, 0.125, 0.12, 0.08, -0.08, -0.1,-0.08]) # l'aile symétrique
         self.path     = path
         self.finesse_moy= 0

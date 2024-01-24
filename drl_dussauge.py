@@ -20,19 +20,16 @@ class drl_dussauge():
         self.act_size = 8
         self.obs_size = self.act_size
         self.obs      = np.zeros(self.obs_size)
-        # variables: camber and 3 thickness
-        #self.x_min    =  np.array([0.,0.02,0.02,0.02])  # np.array([0.1,0.02,0.02,0.02])
-        #self.x_max    =  np.array([0.2,0.08,0.08,0.08])  # np.array([0.65,0.08,0.08,0.08])
-        #self.x_0      =  0.5*(self.x_min+self.x_max) # 0.5*(self.x_min+self.x_max)
-        self.x_min    =  np.array([0.02, 0.05, 0.05, 0.05, 0.05, -0.15, -0.15, -0.15]) 
-        self.x_max    =  np.array([0.08, 0.2, 0.2, 0.2, 0.2, 0.02, 0.02, 0.02]) 
+        # Variable : une pour l'eading edge et les autres pour les points de contrôle
+        self.x_min    =  np.array([0.005, 0.05, 0.05, 0.05, 0.05, -0.15, -0.15, -0.15]) 
+        self.x_max    =  np.array([0.13, 0.2, 0.2, 0.2, 0.2, 0.2, 0.2, 0.2]) 
         self.x_0 = np.array( [0.03, 0.08, 0.125, 0.12, 0.08, -0.08, -0.1,-0.08]) # l'aile symétrique
         self.path     = path
         self.finesse_moy= 0
         self.finesse_max= 0
 
         self.angle = 0 #inclinaison              ########### Super important, regarder comment le prendre en compte
-        
+
         # Set episode number
         self.episode  = 0
 
@@ -114,27 +111,35 @@ class drl_dussauge():
 
     def compute_reward(self, control_parameters):
         # Compute reward
-        with open('./cfd/Resultats/Efforts.txt', 'r') as f:
-            next(f) # Skip header
-            L_finesse = [] 
-            f.readline()
-            for ligne in f :
-                cx, cy = ligne.split()[-2:]
-                cx, cy = -float(cx), -float(cy)
-                if cx*cy == 0.:
-                    L_finesse.append(-100)  # On a quelque chose de ridicule comme ça   
-                else :
-                    L_finesse.append(cy/cx)
-            finesse = np.array(L_finesse)  # 
-        
+        try :
+            with open(self.effort+'/Efforts.txt', 'r') as f:
+                next(f) # Skip header
+                L_finesse = [] 
+                f.readline()
+                for ligne in f :
+                    cx, cy = ligne.split()[-2:]
+                    cx, cy = -float(cx), -float(cy)
+                    if cx*cy == 0.:
+                        L_finesse.append(-100)  # On a quelque chose de ridicule comme ça   
+                    else :
+                        L_finesse.append(cy/cx)
+                finesse = np.array(L_finesse)  # 
+            
+        except : # Si ça n'a pas marché 
+            finesse = None
 
         begin_take_reward = 150 # When we begin to take the reward 
 
 
         # Compute new reward
-        self.reward = finesse[begin_take_reward:].mean()
-        self.finesse_moy = finesse[begin_take_reward:].mean()
-        self.finesse_max = finesse[begin_take_reward:].max()
+        if finesse is not None :
+            self.reward = finesse[begin_take_reward:].mean()
+            self.finesse_moy = finesse[begin_take_reward:].mean()
+            self.finesse_max = finesse[begin_take_reward:].max()
+        else: # Si ça n'a pas tourné 
+            self.reward = -100
+            self.finesse_moy = -100
+            self.finesse_max = -100
 
         
         # On écrit dans le gros fichier
@@ -148,11 +153,11 @@ class drl_dussauge():
         else:
             f = open('Values.txt','a')
         f.write(
-            str(self.episode)+'\t'+str(control_parameters[0])+'\t'+str(control_parameters[1])+'\t'
-            +str(control_parameters[2])+'\t'+str(control_parameters[3])+'\t'+str(control_parameters[4])+
-            '\t'+str(control_parameters[5])+'\t'+str(control_parameters[6])+'\t'+str(control_parameters[7])+
-            '\t'+str(self.finesse_moy)+'\t'+str(self.finesse_max)+'\t'+str(self.reward)+'\n'
-            )
+        str(self.episode)+'\t'+"{:.3e}".format(control_parameters[0])+'\t'+"{:.3e}".format(control_parameters[1])+'\t'
+        +"{:.3e}".format(control_parameters[2])+'\t'+"{:.3e}".format(control_parameters[3])+'\t'+"{:.3e}".format(control_parameters[4])+'\t'
+        +"{:.3e}".format(control_parameters[5])+'\t'+"{:.3e}".format(control_parameters[6])+'\t'+"{:.3e}".format(control_parameters[7])+'\t'
+        +"{:.3e}".format(self.finesse_moy)+'\t'+"{:.3e}".format(self.finesse_max)+'\t'+"{:.3e}".format(self.reward)+'\n'
+        )
         f.close()
 		
         self.episode      += 1 #new
@@ -274,9 +279,6 @@ class drl_dussauge():
 
         # calculate middle Bezier Curves
         for i in range(1,len(ctlPts)-3):
-            p0 = ctlPts[i]
-            p1 = ctlPts[i+1]
-            p2 = ctlPts[i+2]
             midX_1=(ctlPts[i][0]+ctlPts[i+1][0])/2
             midY_1=(ctlPts[i][1]+ctlPts[i+1][1])/2
             midX_2=(ctlPts[i+1][0]+ctlPts[i+2][0])/2

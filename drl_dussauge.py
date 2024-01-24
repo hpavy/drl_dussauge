@@ -28,7 +28,7 @@ class drl_dussauge():
         self.finesse_moy= 0
         self.finesse_max= 0
 
-        self.angle = 0 #inclinaison              ########### Super important, regarder comment le prendre en compte
+        self.angle = -np.pi/4  #inclinaison en radian            ########### Super important, regarder comment le prendre en compte
 
         # Set episode number
         self.episode  = 0
@@ -56,7 +56,7 @@ class drl_dussauge():
 
         control_points = self.reconstruct_control_points(control_parameters)
         curve = self.airfoil(control_points,16)
-
+        curve = self.rotate(curve)
         mesh_size = 0.005 # Mesh size
         try:
             # Init GMSH
@@ -320,4 +320,9 @@ class drl_dussauge():
         for k in range(3):
             control_points[k+7][1] = control_parameter[5+k]
         return control_points
+
+    def rotate(self,curve):
+        curve = np.array(curve)
+        rotate_matrix = np.array([[np.cos(self.angle), np.sin(self.angle)], [-np.sin(self.angle), np.cos(self.angle)]])
+        return curve @ rotate_matrix
 

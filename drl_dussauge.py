@@ -138,8 +138,8 @@ class drl_dussauge():
 
 
         # Compute new reward
-        if finesse is not None and self.area >= self.area_min:   # Si on est supérieur à l'air minimale 
-            self.reward = finesse[begin_take_reward:].mean()
+        if finesse is not None :   # Si on est supérieur à l'air minimale 
+            self.reward = finesse[begin_take_reward:].mean() - self.punition()
             self.finesse_moy = finesse[begin_take_reward:].mean()
             self.finesse_max = finesse[begin_take_reward:].max()
         else: # Si ça n'a pas tourné ou que l'air est trop petite 
@@ -370,4 +370,11 @@ class drl_dussauge():
         correction = x[-1] * y[0] - y[-1]* x[0]
         main_area = np.dot(x[:-1], y[1:]) - np.dot(y[:-1], x[1:])
         return 0.5*np.abs(main_area + correction)
+
+    def punition(self):
+        # Si on est en dessous de l'aire min => punition 
+        if self.area < self.area_min :
+            return np.exp((self.area_min/self.area) -1) - 1 # vaut 0 au début 
+        else : 
+            return 0. 
 

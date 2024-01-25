@@ -24,17 +24,17 @@ class drl_dussauge():
         # Variable : une pour l'eading edge et les autres pour les points de contrôle
         self.x_min    =  np.array([0.01, 3, 3, 3, 3, -3, -3, -3]) 
         self.x_max    =  np.array([0.1, 0., 0., 0., 0., 0., 0., 0.]) 
-        self.x_0 = np.array( [0.03, 0.08, 0.125, 0.12, 0.08, -0.08, -0.1,-0.08]) # l'aile symétrique
+        self.x_0 = np.array( [0.03, 0.08, 0.125, 0.12, 0.08, -0.08, -0.1,-0.08]) * 0.53 # l'aile symétrique pour avoir une surface de 0.8
         self.x_camb = 0.3    # la cambrure, pour l'instant elle ne varie pas 
         self.y_camb = 0.    # la cambrure, pour l'instant elle ne varie pas 
         self.area = 0  # on va écrire les aires ici
         self.path     = path
         self.finesse_moy= 0
         self.finesse_max= 0
-        self.area_target = 0.15 # La surface cible
+        self.area_target = 0.08 # La surface cible
         self.area_min = 0.1                                      ########### Ici on met la surface minimale autorisée
         self.angle = 0.  #inclinaison en radian            ########### Super important, regarder comment le prendre en compte
-        self.alpha = 10  # pour avoir une surface de ref
+        self.alpha = 200  # pour avoir une surface de ref
 
 
         # Set episode number
@@ -138,7 +138,7 @@ class drl_dussauge():
         except : # Si ça n'a pas marché 
             finesse = None
 
-        begin_take_reward = 150 # When we begin to take the reward 
+        begin_take_reward = 1200 # When we begin to take the reward 
 
 
         # Compute new reward

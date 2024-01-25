@@ -22,8 +22,8 @@ class drl_dussauge():
         self.obs_size = self.act_size
         self.obs      = np.zeros(self.obs_size)
         # Variable : une pour l'eading edge et les autres pour les points de contrôle
-        self.x_min    =  np.array([0.01, 3, 3, 3, 3, -3, -3, -3]) 
-        self.x_max    =  np.array([0.1, 0., 0., 0., 0., 0., 0., 0.]) 
+        self.x_min    =  np.array([0.01, 0, 0, 0, 0, -0.3, -0.3, -0.3]) 
+        self.x_max    =  np.array([0.1, 0.3, 0.3, 0.4, 0.4, 0., 0., 0.]) 
         self.x_0 = np.array( [0.03, 0.08, 0.125, 0.12, 0.08, -0.08, -0.1,-0.08]) * 0.53 # l'aile symétrique pour avoir une surface de 0.8
         self.x_camb = 0.3    # la cambrure, pour l'instant elle ne varie pas 
         self.y_camb = 0.    # la cambrure, pour l'instant elle ne varie pas 
@@ -138,12 +138,12 @@ class drl_dussauge():
         except : # Si ça n'a pas marché 
             finesse = None
 
-        begin_take_reward = 1200 # When we begin to take the reward 
+        begin_take_reward = 1200  # When we begin to take the reward 
 
 
         # Compute new reward
         if finesse is not None :  
-            self.reward = finesse[begin_take_reward:].mean() + self.alpha * abs(self.area - self.area_target)   # - self.punition()  On ne punnit plus 
+            self.reward = finesse[begin_take_reward:].mean() - self.alpha * abs(self.area - self.area_target)   # - self.punition()  On ne punnit plus 
             self.finesse_moy = finesse[begin_take_reward:].mean()
             self.finesse_max = finesse[begin_take_reward:].max()
         else: # Si ça n'a pas tourné  

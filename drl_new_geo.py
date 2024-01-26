@@ -34,7 +34,7 @@ class drl_dussauge():
         self.area_target = 0.08 # La surface cible
         self.area_min = 0.1                                      ########### Ici on met la surface minimale autorisée
         self.angle = 0.  #inclinaison en radian            ########### Super important, regarder comment le prendre en compte
-        self.alpha = 200  # pour avoir une surface de ref
+        self.alpha = 80  # pour avoir une surface de ref
 
 
         # Set episode number
@@ -52,8 +52,8 @@ class drl_dussauge():
             os.system('mv '+self.output_path+'cfd/Resultats/Efforts.txt '+self.effort+'.')
             os.system('rm -r '+self.output_path+'cfd')
             # Save
-            os.system('cp -r '+self.vtu_path+'bulles_00150.vtu ./video/')
-            os.system('mv ./video/bulles_00150.vtu '+'./video/video_'+str(self.episode)+'.vtu')
+            os.system('cp -r '+self.vtu_path+'bulles_00800.vtu ./video/')
+            os.system('mv ./video/bulles_00800.vtu '+'./video/video_'+str(self.episode)+'.vtu')
         
         except : 
             print("La simulation ne s'est pas lancée ") ############ A enlever !!! Juste pour debugger 

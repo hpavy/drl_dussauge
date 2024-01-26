@@ -62,8 +62,8 @@ class drl_dussauge():
         os.system('mv '+self.output_path+'cfd/Resultats/2d/* '+self.vtu_path+'.')
         os.system('mv '+self.output_path+'cfd/Resultats/Efforts.txt '+self.effort+'.')
         os.system('rm -r '+self.output_path+'cfd')
-        os.system('cp -r '+self.vtu_path+'bulles_00080.vtu ./video/')                                  
-        os.system('mv ./video/bulles_00080.vtu '+'./video/video_'+str(self.episode)+'.vtu')
+        os.system('cp -r '+self.vtu_path+'bulles_00800.vtu ./video/')                                  
+        os.system('mv ./video/bulles_00800.vtu '+'./video/video_'+str(self.episode)+'.vtu')
         
 
     def shape_generation_dussauge(self, control_parameters):
@@ -128,14 +128,15 @@ class drl_dussauge():
 
         #--- CALCUL DU REWARD ------------------------------------------------------------------------------------------+
 
-        begin_take_reward = 120                               # When we begin to take the reward 
+        begin_take_finesse = 1200                                      # When we begin to take the reward 
 
         if finesse is not None :  
-            self.reward      = finesse[begin_take_reward:].mean() - self.alpha * abs(self.area - self.area_target)   
-            self.finesse_moy = finesse[begin_take_reward:].mean()
-            self.finesse_max = finesse[begin_take_reward:].max()
+            self.reward      = finesse[begin_take_finesse:].mean() 
+            self.reward      -= self.punition_affine_marge(marge=0.1)  # Punition affine avec une marge de 10 % 
+            self.finesse_moy = finesse[begin_take_finesse:].mean()
+            self.finesse_max = finesse[begin_take_finesse:].max()
 
-        else:                                                   # Si ça n'a pas tourné  
+        else:                                                          # Si ça n'a pas tourné  
             self.reward      = -1000
             self.finesse_moy = -1000
             self.finesse_max = -1000
@@ -272,8 +273,8 @@ class drl_dussauge():
 #--- FONCTION DE PARAMETRISATION ----------------------------------------------------------------------------------------------+
 
     def quadraticBezier(self,t,points):
-        B_x=(1-t)*((1-t)*points[0][0]+t*points[1][0])+t*((1-t)*points[1][0]+t*points[2][0])
-        B_y=(1-t)*((1-t)*points[0][1]+t*points[1][1])+t*((1-t)*points[1][1]+t*points[2][1])
+        B_x = (1-t)*((1-t)*points[0][0]+t*points[1][0])+t*((1-t)*points[1][0]+t*points[2][0])
+        B_y = (1-t)*((1-t)*points[0][1]+t*points[1][1])+t*((1-t)*points[1][1]+t*points[2][1])
         return B_x,B_y
 
     def cambrure(self, x, y, numPts):
@@ -376,4 +377,17 @@ class drl_dussauge():
             return np.exp((self.area_min/self.area) -1) - 1       # vaut 0 au début 
         else : 
             return 0. 
+
+    def punition_affine_marge(self, marge):
+        """ Donne une punition affine de alpha * (S-Sref) avec marge de marge %"""
+        if self.area_target * (1 - marge) < self.area < self.area_target * (1 + marge) : 
+            return 0
+        elif self.area < self.area_target * (1 - marge) : 
+            return self.alpha * abs((1 - marge) * self.area_target - self.area)
+        else : 
+            return self.alpha * abs((1 + marge) * self.area_target - self.area)
+
+    def punition_affine(self) : 
+        """ Donne une punition de la forme alpha * abs(S-Sref) """
+        return self.alpha * abs(self.area - self.area_target)
 

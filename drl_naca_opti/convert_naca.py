@@ -105,7 +105,7 @@ def find_y_end(L, x):
     print(x)
     return None
 
-def convert_naca_profile(file):
+def convert_naca_profile(file, title=None):
     """ file : naca profile. Il renvoit la parametrisation permettant d'avoir le même"""
     target_airfoil = []
     with open(file, 'r') as foil_txt:
@@ -133,14 +133,17 @@ def convert_naca_profile(file):
                                     ) 
     res = minimize(cost_function, cond_initial, method='Powell', tol=1e-10, options={'disp': True, 'maxiter':10000})
 
-    ## pour voir si ca marche 
-    x = bezier_curve(res.x, 100)
-    x = np.array(x)
-    plt.plot(x[:,0], x[:,1], color= 'green')
-    plt.plot(target_airfoil[:,0], target_airfoil[:,1], color='red', linestyle='--')
-
-    plt.axis('equal')
-    plt.title("Test Bezier generation")
+    ## pour voir si ca marche on plot 
+    if title is not None:
+        x = bezier_curve(res.x, 100)
+        x = np.array(x)
+        plt.plot(x[:,0], x[:,1], color= 'green', label = "reconstruct shape with parametrisation")
+        plt.plot(target_airfoil[:,0], target_airfoil[:,1], color='red', linestyle='--', label = "initial shape")
+        plt.axis('equal')
+        plt.legend()
+        plt.grid()
+        plt.title(title)
+        plt.show()
 
 
     return res.x

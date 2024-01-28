@@ -15,7 +15,9 @@ import datetime as dt
 
 ### On part d'une aile Naca qu'on va essayer de modifier un peu pour avoir une aile parfaite 
 ### On ne met alors pas de cambrure
-
+                                #################
+                                ### Naca 2412 ###
+                                #################
 
 class drl_naca_opti():
 
@@ -31,22 +33,29 @@ class drl_naca_opti():
     # De 2 à 8 : contrôle les points 
     # De 9 à 10 si on fait varier la cambrure : jouent sur l'abscisse du point qui définit la cambrure 
 
-        self.x_min       = np.array([0.01, 0, 0, 0, 0, -0.3, -0.3, -0.3])
-        self.x_max       = np.array([0.1, 0.3, 0.3, 0.4, 0.4, 0., 0., 0.]) 
-        self.x_0         = 0.53 * np.array(                                 # L'aile symétrique pour avoir une surface de 0.8
-                                    [0.03, 0.08, 0.125,
-                                    0.12, 0.08, -0.08, -0.1,-0.08]
-                                    )   
-        self.x_camb      = 0.3                                              # La cambrure, pour l'instant elle ne varie pas 
-        self.y_camb      = 0.                                               # La cambrure, pour l'instant elle ne varie pas 
-        self.area        = 0  
+        ### Calcul des paramètres spéciaux à l'optimisation naca
+        self.x_0         = np.array([                                           # Coord du naca 2412
+            0.02340366,  0.08213517,  0.12281425,  0.12498064,
+            0.08461117, -0.01325784,  0.00811609,  0.02124909])
+        self.x_camb      = 0.67690661                                           # La cambrure, pour l'instant elle ne varie pas 
+        self.y_camb      = -0.0171881                                           # La cambrure, pour l'instant elle ne varie pas 
+
+
+        ### Calcul des param 
+        self.x_min       = self.x_0 - 0.2 * np.abs(self.x_0)                    # On s'autorise a plus ou moins 20 pourcent
+        self.x_max       = self.x_0 + 0.2 * np.abs(self.x_0)
+        control_points   = self.reconstruct_control_points(self.x_0)            # Transforme les actions en control point
+        curve            = self.airfoil(control_points,16)                      # Donne la courbe de l'aile
+        self.area        = self.polygon_area(curve) 
+        self.area_target = self.area                                            # On vise l'area du naca
+        
+        ### Le code classique 
         self.path        = path
         self.finesse_moy = 0
         self.finesse_max = 0
-        self.area_target = 0.08 
         self.area_min    = 0.1                                   
         self.angle       = 0.           
-        self.alpha       = 80                                               # Le alpha dans la formule du reward                                                        
+        self.alpha       = 200                                              # Le alpha dans la formule du reward                                                        
         self.episode     = 0                                                # Set episode number
         self.time_init   = 0.                                               # Pour connaître la durée d'un épisode
         self.time_end    = 0.
@@ -290,14 +299,19 @@ class drl_naca_opti():
 
     def find_camber_y(self, x, cambrure_coord):
         """ Pour un x donné il donne le y de la cambrure le plus proche """
-        for k,coord_camber in enumerate(cambrure_coord):
-            if coord_camber[0] > x :
-                return (coord_camber[1]+cambrure_coord[k-1][1])/2                      # On prend la moyenne des deux 
-        return 0.
+        try :
+            for k,coord_camber in enumerate(cambrure_coord):
+                if coord_camber[0] > x :
+                    return (coord_camber[1]+cambrure_coord[k-1][1])/2                      # On prend la moyenne des deux 
+        except :
+            return 0.
 
     def reconstruct_control_points(self, control_parameter):
         ### Les points autour desquels on bouge
-        x_param_cambrure, y_param_cambrure =  control_parameter[-2:]                   # Les deux points definissant la cambrure 
+        if len(control_parameter) == 10 : 
+            x_param_cambrure, y_param_cambrure =  control_parameter[-2:]               # Les deux points definissant la cambrure 
+        else :
+            x_param_cambrure, y_param_cambrure =  0., 0. 
         cambrure_coord = self.cambrure(x_param_cambrure, y_param_cambrure,16*40)
         base_points    =[[1,0.001],                                                    # Trailing edge (top)
                         [0.76,None],

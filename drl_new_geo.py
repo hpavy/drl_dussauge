@@ -287,14 +287,20 @@ class drl_dussauge():
 
     def find_camber_y(self, x, cambrure_coord):
         """ Pour un x donné il donne le y de la cambrure le plus proche """
-        for k,coord_camber in enumerate(cambrure_coord):
-            if coord_camber[0] > x :
-                return (coord_camber[1]+cambrure_coord[k-1][1])/2                      # On prend la moyenne des deux 
-        return 0.
+        try :
+            for k,coord_camber in enumerate(cambrure_coord):
+                if coord_camber[0] > x :
+                    return (coord_camber[1]+cambrure_coord[k-1][1])/2                      # On prend la moyenne des deux 
+        except :
+            return 0.
 
     def reconstruct_control_points(self, control_parameter):
         ### Les points autour desquels on bouge
-        x_param_cambrure, y_param_cambrure =  control_parameter[-2:]                   # Les deux points definissant la cambrure 
+        if len(control_parameter) == 10 : 
+            x_param_cambrure, y_param_cambrure =  control_parameter[-2:]               # Les deux points definissant la cambrure 
+        else :
+            x_param_cambrure, y_param_cambrure =  0., 0.                               # Si on n'optimise pas avec la cambrure
+
         cambrure_coord = self.cambrure(x_param_cambrure, y_param_cambrure,16*40)
         base_points    =[[1,0.001],                                                    # Trailing edge (top)
                         [0.76,None],

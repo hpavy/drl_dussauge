@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 
 
 
-###  Les fonctions de ma param
+################## Les fonctions de ma parametrisation ##################################
 
 def quadraticBezier(t,points):
     B_x = (1-t)*((1-t)*points[0][0]+t*points[1][0])+t*((1-t)*points[1][0]+t*points[2][0])
@@ -29,7 +29,10 @@ def find_camber_y(x, cambrure_coord):
 
 def reconstruct_control_points(control_parameter):
     ### Les points autour desquels on bouge
-    x_param_cambrure, y_param_cambrure =  control_parameter[-2:]                   # Les deux points definissant la cambrure 
+    if len(control_parameter) == 10 : 
+        x_param_cambrure, y_param_cambrure =  control_parameter[-2:]               # Les deux points definissant la cambrure 
+    else :
+        x_param_cambrure, y_param_cambrure =  0., 0.     
     cambrure_coord = cambrure(x_param_cambrure, y_param_cambrure,16*40)
     base_points    =[[1,0.001],                                                    # Trailing edge (top)
                     [0.76,None],
@@ -148,6 +151,65 @@ def convert_naca_profile(file, title=None):
 
     return res.x
 
+
+
+
+
+
+
+########################### Les mêmes fonction mais avec la cambrure #############################
+
+
+###  Les fonctions de ma param
+
+def convert_naca_profile_curb(file, title=None):
+    """ file : naca profile. Il renvoit la parametrisation permettant d'avoir le même"""
+    target_airfoil = []
+    with open(file, 'r') as foil_txt:
+        for i, row in enumerate(foil_txt.readlines()):
+            if len(row.split())==2: 
+                x, y = row.split()
+                target_airfoil.append([float(x), float(y)])    
+    target_airfoil = np.asarray(target_airfoil)
+
+    def cost_function_curb(control_parameter): 
+        x1 = np.linspace(0.05,0.99,50)                     # On regarde le match sur 100 points 
+        x2 = np.linspace(0.05,0.99,50)
+        curb = bezier_curve(control_parameter, 50)         # On crée notre courbe 
+        curb = np.array(curb)
+        objective = 0                                      # Ce qu'on veut minimiser
+        for coord_x in x1 :
+            objective += abs(find_y_end(curb[len(curb)//2:,:], coord_x)-find_y_end(target_airfoil[len(target_airfoil)//2:,:], coord_x))
+        for coord_x in x2 :
+            objective += abs(find_y_start(curb[:len(curb)//2,:], coord_x)-find_y_start(target_airfoil[:len(target_airfoil)//2,:], coord_x))
+        return objective
+
+    cond_initial = 0.53 * np.array(                                 # L'aile symétrique pour avoir une surface de 0.8
+                                    [0.03, 0.08, 0.125,
+                                    0.12, 0.08, -0.08, -0.1,
+                                    -0.08, 0.5, 0.]
+                                    ) 
+    bounds = [
+        (-1, 1), (-1, 1),(-1, 1),(-1, 1),
+        (-1, 1),(-1, 1),(-1, 1),(-1, 1),
+        (0,1), (-1,1)
+        ]
+    res = minimize(cost_function_curb, cond_initial, method='Powell', tol=1e-10, options={'disp': True, 'maxiter':10000}, bounds=bounds)
+
+    ## pour voir si ca marche on plot 
+    if title is not None:
+        x = bezier_curve(res.x, 100)
+        x = np.array(x)
+        plt.plot(x[:,0], x[:,1], color= 'green', label = "reconstruct shape with parametrisation")
+        plt.plot(target_airfoil[:,0], target_airfoil[:,1], color='red', linestyle='--', label = "initial shape")
+        plt.axis('equal')
+        plt.legend()
+        plt.grid()
+        plt.title(title)
+        plt.show()
+
+
+    return res.x
 
 
 

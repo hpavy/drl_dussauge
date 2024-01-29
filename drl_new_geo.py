@@ -57,7 +57,7 @@ class drl_dussauge():
         os.system(
             'cd '+self.output_path+
             'cfd/.; touch run.lock; mpirun -n 8 /softs/cemef/cimlibxx/master/bin/cimlib_CFD_driver'+ 
-            'Principale.mtc > trash.txt;'
+            ' Principale.mtc > trash.txt;'
             )
         os.system('mv '+self.output_path+'cfd/Resultats/2d/* '+self.vtu_path+'.')
         os.system('mv '+self.output_path+'cfd/Resultats/Efforts.txt '+self.effort+'.')

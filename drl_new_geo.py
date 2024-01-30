@@ -302,7 +302,7 @@ class drl_dussauge():
             x_param_cambrure, y_param_cambrure =  0., 0.                               # Si on n'optimise pas avec la cambrure
 
         cambrure_coord = self.cambrure(x_param_cambrure, y_param_cambrure,16*40)
-        base_points    =[[1,0.004],                                                    # Trailing edge (top)
+        base_points    =[[1,0.002],                                                    # Trailing edge (top)
                         [0.76,None],
                         [0.52,None],
                         [0.25,None],
@@ -312,8 +312,8 @@ class drl_dussauge():
                         [0.15,None],
                         [0.37,None],
                         [0.69,None],
-                        [1,-0.004],
-                        [1.008, 0]]  
+                        [1,-0.002],
+                        [1.004, 0]]  
 
         ### Construction des control points pour génerer la courbe 
         control_points             = base_points[::]                                     
@@ -341,7 +341,7 @@ class drl_dussauge():
         curve      = curve+list(zip(B_x,B_y))
 
         ### Calculate middle Bezier Curves
-        for i in range(1,len(ctlPts)-2):
+        for i in range(1,len(ctlPts)-4):
             midX_1  = (ctlPts[i][0]+ctlPts[i+1][0])/2
             midY_1  = (ctlPts[i][1]+ctlPts[i+1][1])/2
             midX_2  = (ctlPts[i+1][0]+ctlPts[i+2][0])/2
@@ -350,9 +350,10 @@ class drl_dussauge():
             curve   = curve+list(zip(B_x,B_y))                     
     
         ### Calculate last Bezier curve
-        midX    = (ctlPts[-2][0]+ctlPts[-3][0])/2
+        midX    = (ctlPts[-3][0]+ctlPts[-4][0])/2
         midY    = (ctlPts[-3][1]+ctlPts[-4][1])/2
-        B_x,B_y = self.quadraticBezier(t,[[midX,midY],ctlPts[-3],ctlPts[-1]])
+        B_x,B_y = self.quadraticBezier(t,[[midX,midY],ctlPts[-3],ctlPts[-2]])
+        curve = curve+list(zip(B_x,B_y))
 
         ## On fait le petit bout arrondi
         B_x,B_y = self.quadraticBezier(t,[ctlPts[-2],ctlPts[-1],ctlPts[0]])

@@ -140,9 +140,9 @@ class drl_dussauge():
             self.finesse_max = finesse[begin_take_finesse:].max()
 
         else:                                                          # Si ça n'a pas tourné  
-            self.reward      = -1000
-            self.finesse_moy = -1000
-            self.finesse_max = -1000
+            self.reward      = 0
+            self.finesse_moy = 0
+            self.finesse_max = 0
 
         ### Ecriture dans Values
         print(os.path)
@@ -210,10 +210,14 @@ class drl_dussauge():
         os.system('cd '+self.output_path+'cfd ; cp -r airfoil.t ../t_mesh')
         
         ### solving the problem
-        self.solve_problem_cimlib()
-
-        ### Compute the reward 
-        self.compute_reward(np.array(x))
+        if os.path.isfile(self.output_path+'cfd/airfoil.msh'):                     # Si le mesh a fonctionné
+            self.solve_problem_cimlib()
+            ### Compute the reward 
+            self.compute_reward(np.array(x))
+        else :
+            self.reward      = 0
+            self.finesse_moy = 0
+            self.finesse_max = 0
 
         ### On écrit la durée
         self.time_end     = dt.datetime.now()

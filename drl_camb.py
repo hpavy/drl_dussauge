@@ -30,13 +30,13 @@ class drl_dussauge():
     # De 9 à 10 si on fait varier la cambrure : jouent sur l'abscisse du point qui définit la cambrure 
 
         self.x_min       = np.array([0.005, 0, 0, 0, 0, -0.08, -0.1, -0.1,
-         0.3, -0.03])
+         0.3, -0.1])
         self.x_max       = np.array([0.05, 0.07, 0.12, 0.07, 0.15, 0., 0., 0.,  # La cambrure peut bouger de -0.03 à +0.03
-         0.7, 0.03]) 
+         0.7, 0.3]) 
         self.x_0         = np.array([                                           # Coord du naca 2412
             0.02340366,  0.08213517,  0.12281425,  0.12498064,
             0.08461117, -0.01325784,  0.00811609,  0.02124909, 
-            0.68, -0.017])
+            0.68, +0.3])
         self.x_camb      = 0.3                                              # La cambrure, pour l'instant elle ne varie pas 
         self.y_camb      = 0.                                               # La cambrure, pour l'instant elle ne varie pas 
         self.area        = 0  
@@ -65,8 +65,8 @@ class drl_dussauge():
         os.system('mv '+self.output_path+'cfd/Resultats/2d/* '+self.vtu_path+'.')
         os.system('mv '+self.output_path+'cfd/Resultats/Efforts.txt '+self.effort+'.')
         os.system('rm -r '+self.output_path+'cfd')
-        os.system('cp -r '+self.vtu_path+'bulles_00800.vtu ./video/')                                  
-        os.system('mv ./video/bulles_00800.vtu '+'./video/video_'+str(self.episode)+'.vtu')
+        os.system('cp -r '+self.vtu_path+'bulles_00400.vtu ./video/')                                  
+        os.system('mv ./video/bulles_00400.vtu '+'./video/video_'+str(self.episode)+'.vtu')
         
 
     def shape_generation_dussauge(self, control_parameters):
@@ -131,7 +131,7 @@ class drl_dussauge():
 
         #--- CALCUL DU REWARD ------------------------------------------------------------------------------------------+
 
-        begin_take_finesse = 1200                                      # When we begin to take the reward 
+        begin_take_finesse = 400                                       # When we begin to take the reward 
 
         if finesse is not None :  
             self.reward      = finesse[begin_take_finesse:].mean() 
@@ -305,7 +305,7 @@ class drl_dussauge():
             x_param_cambrure, y_param_cambrure =  0., 0.                               # Si on n'optimise pas avec la cambrure
 
         cambrure_coord = self.cambrure(x_param_cambrure, y_param_cambrure,16*40)
-        base_points    =[[1,0.004],                                                    # Trailing edge (top)
+        base_points    =[[1,0.001],                                                    # Trailing edge (top)
                         [0.76,None],
                         [0.52,None],
                         [0.25,None],
@@ -315,8 +315,7 @@ class drl_dussauge():
                         [0.15,None],
                         [0.37,None],
                         [0.69,None],
-                        [1,-0.004],
-                        [1.008, 0]]  
+                        [1,-0.001]] 
 
         ### Construction des control points pour génerer la courbe 
         control_points             = base_points[::]                                     
@@ -344,7 +343,7 @@ class drl_dussauge():
         curve      = curve+list(zip(B_x,B_y))
 
         ### Calculate middle Bezier Curves
-        for i in range(1,len(ctlPts)-2):
+        for i in range(1,len(ctlPts)-3):
             midX_1  = (ctlPts[i][0]+ctlPts[i+1][0])/2
             midY_1  = (ctlPts[i][1]+ctlPts[i+1][1])/2
             midX_2  = (ctlPts[i+1][0]+ctlPts[i+2][0])/2
@@ -353,13 +352,11 @@ class drl_dussauge():
             curve   = curve+list(zip(B_x,B_y))                     
     
         ### Calculate last Bezier curve
-        midX    = (ctlPts[-2][0]+ctlPts[-3][0])/2
-        midY    = (ctlPts[-3][1]+ctlPts[-4][1])/2
-        B_x,B_y = self.quadraticBezier(t,[[midX,midY],ctlPts[-3],ctlPts[-1]])
-
-        ## On fait le petit bout arrondi
-        B_x,B_y = self.quadraticBezier(t,[ctlPts[-2],ctlPts[-1],ctlPts[0]])
-        curve=curve+list(zip(B_x,B_y))
+        midX    = (ctlPts[-3][0]+ctlPts[-2][0])/2
+        midY    = (ctlPts[-3][1]+ctlPts[-2][1])/2
+        B_x,B_y = self.quadraticBezier(t,[[midX,midY],ctlPts[-2],ctlPts[-1]])
+        curve   = curve+list(zip(B_x,B_y))
+        curve.append(ctlPts[-1])
         return curve
 
 
@@ -403,4 +400,3 @@ class drl_dussauge():
     def punition_affine(self) : 
         """ Donne une punition de la forme alpha * abs(S-Sref) """
         return self.alpha * abs(self.area - self.area_target)
-

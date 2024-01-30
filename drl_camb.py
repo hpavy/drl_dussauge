@@ -150,7 +150,7 @@ class drl_dussauge():
             f = open('Values.txt','w')
             f.write(
                 'Index'+'\t'+'edge'+'\t'+'1'+'\t'+'2'+'\t'+'3'+'\t'+'4'+'\t'+'5'+'\t'+'6'+
-                '\t'+'7'+'\t'+'finesse_moy'+'\t'+'finesse_max'+'\t'+'Area'+'\t'+'Reward'+'\n'
+                '\t'+'7'+'\t'+'8'+'\t'+'9'+'\t'+'finesse_moy'+'\t'+'finesse_max'+'\t'+'Area'+'\t'+'Reward'+'\n'
                 )
         else:
             f = open('Values.txt','a')
@@ -159,6 +159,7 @@ class drl_dussauge():
         +"{:.3e}".format(control_parameters[2])+'\t'+"{:.3e}".format(control_parameters[3])+'\t'
         +"{:.3e}".format(control_parameters[4])+'\t'+"{:.3e}".format(control_parameters[5])+'\t'
         +"{:.3e}".format(control_parameters[6])+'\t'+"{:.3e}".format(control_parameters[7])+'\t'
+        +"{:.3e}".format(control_parameters[8])+'\t'+"{:.3e}".format(control_parameters[9])+'\t'
         +"{:.3e}".format(self.finesse_moy)+'\t'+"{:.3e}".format(self.finesse_max)+'\t'+"{:.3e}".format(self.area)+'\t'+
         "{:.3e}".format(self.reward)+'\n'
         )

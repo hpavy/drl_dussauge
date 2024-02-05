@@ -33,10 +33,8 @@ class drl_dussauge():
          0.3, -0.1])
         self.x_max       = np.array([0.05, 0.07, 0.12, 0.07, 0.15, 0., 0., 0.,  # La cambrure peut bouger de -0.03 à +0.03
          0.7, 0.3]) 
-        self.x_0         = np.array([                                           # Coord du naca 2412
-            0.02340366,  0.08213517,  0.12281425,  0.12498064,
-            0.08461117, -0.01325784,  0.00811609,  0.02124909, 
-            0.68, +0.3])
+        self.x_0         = np.array([ 0.02359928,  0.04828674,  0.07590444,  0.08340451,  0.05728329,
+        -0.04362299, -0.03815534, -0.02214095,  0.7004262 , -0.00406199])
         self.x_camb      = 0.3                                              # La cambrure, pour l'instant elle ne varie pas 
         self.y_camb      = 0.                                               # La cambrure, pour l'instant elle ne varie pas 
         self.area        = 0  
@@ -76,17 +74,17 @@ class drl_dussauge():
         curve          = self.airfoil(control_points,16)                      # Donne la courbe de l'aile
         self.area      = self.polygon_area(curve)
         curve          = self.rotate(curve)                                   # Si on met un angle d'attaque
-        curve          = self.translate_curve(curve, 2, 4)
+        curve          = self.translate_curve(curve, 4, 4)
 
         
         ### On mesh le nouvel airfoil
-        mesh_size      = 0.1                                                # Mesh size
+        mesh_size      = 0.001                                                # Mesh size
         try:
             gmsh.initialize(sys.argv)                                         # Init GMSH
             gmsh.option.setNumber("General.Terminal", 1)                      # Ask GMSH to display information in the terminal
             model = gmsh.model                                                # Create a model and name it "shape"
             model.add("shape") 
-            lc = 0.1
+            lc = 0.3
 
             # Définir les points du rectangle
             point1 = model.geo.addPoint(0, 0, 0, lc)
@@ -122,7 +120,7 @@ class drl_dussauge():
             model.geo.synchronize()
             gmsh.option.setNumber("Mesh.MshFileVersion", 2.0)                  # gmsh version 2.0
             model.mesh.generate(2)                                             # Mesh (2D)
-            gmsh.write(self.output_path+'cfd/airfoil.msh')                     # Write on disk
+            gmsh.write(self.output_path+'cfd/Domaine-rect.msh')                     # Write on disk
             gmsh.finalize()                                                    # Finalize GMSH
 
         except Exception as e:
@@ -229,13 +227,13 @@ class drl_dussauge():
 
         ### convert to .t
         os.system('cd '+self.output_path+'cfd ; python3 gmsh2mtc.py')
-        os.system('cd '+self.output_path+'cfd ; cp -r airfoil.msh ../msh')
+        os.system('cd '+self.output_path+'cfd ; cp -r Domaine-rect.msh ../msh')
         os.system('cd '+self.output_path+'cfd ; module load cimlibxx/master')
-        os.system('cd '+self.output_path+'cfd ; echo 0 | mtcexe airfoil.t')
-        os.system('cd '+self.output_path+'cfd ; cp -r airfoil.t ../t_mesh')
+        os.system('cd '+self.output_path+'cfd ; echo 0 | mtcexe Domaine-rect.t')
+        os.system('cd '+self.output_path+'cfd ; cp -r Domaine-rect.t ../t_mesh')
         
         ### solving the problem
-        if os.path.isfile(self.output_path+'cfd/airfoil.msh'):                     # Si le mesh a fonctionné
+        if os.path.isfile(self.output_path+'cfd/Domaine-rect.msh'):                     # Si le mesh a fonctionné
             self.solve_problem_cimlib()
             ### Compute the reward 
             self.compute_reward(np.array(x))
